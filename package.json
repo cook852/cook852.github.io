@@ -16,7 +16,8 @@
     "test": "node --test \"scripts/*.test.mjs\"",
     "check:recipes": "node scripts/check-recipes.mjs",
     "sync:extraction": "node scripts/sync-extraction.mjs",
-    "import:recipe": "node scripts/import-recipe.mjs"
+    "import:recipe": "node scripts/import-recipe.mjs",
+    "fetch:recipe": "node scripts/fetch-recipe.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
