@@ -3,19 +3,19 @@
   "properties": {
     "source": {
       "type": "object",
-      "description": "The video this recipe comes from",
+      "description": "The video or webpage this recipe comes from",
       "properties": {
         "url": {
           "type": "string",
-          "description": "Video URL"
+          "description": "Video or page URL"
         },
         "title": {
           "type": "string",
-          "description": "Video title as shown on the page"
+          "description": "Video or page title as shown"
         },
         "channel": {
           "type": "string",
-          "description": "Channel or creator name"
+          "description": "Channel, website or author name"
         }
       },
       "required": [
@@ -124,7 +124,7 @@
           },
           "timestamp": {
             "type": "string",
-            "description": "mm:ss where it appears in the video"
+            "description": "mm:ss in the video; empty for webpages"
           }
         },
         "required": [
@@ -153,7 +153,7 @@
           },
           "timestamp": {
             "type": "string",
-            "description": "mm:ss where it appears in the video"
+            "description": "mm:ss in the video; empty for webpages"
           }
         },
         "required": [
@@ -174,7 +174,7 @@
           },
           "timestamp": {
             "type": "string",
-            "description": "mm:ss where the step starts"
+            "description": "mm:ss in the video; empty for webpages"
           }
         },
         "required": [
@@ -205,7 +205,7 @@
           },
           "timestamp": {
             "type": "string",
-            "description": "mm:ss to check"
+            "description": "mm:ss in the video; empty for webpages"
           }
         },
         "required": [

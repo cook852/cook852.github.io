@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {loadVocabulary, syncSchema, syncPrompt} from './sync-extraction.mjs';
+import {loadVocabulary, syncSchema, syncPrompt, PROMPT_PATHS} from './sync-extraction.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -37,7 +37,15 @@ test('committedExtractionFiles_matchRepoVocabulary', () => {
   // Fails in CI when someone adds a tag or category without re-syncing.
   const vocab = loadVocabulary();
   const schema = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'extraction/recipe.schema.json'), 'utf8'));
-  const prompt = fs.readFileSync(path.join(REPO_ROOT, 'extraction/prompt.md'), 'utf8');
   assert.deepEqual(syncSchema(schema, vocab), schema);
-  assert.equal(syncPrompt(prompt, vocab), prompt);
+  for (const promptPath of PROMPT_PATHS) {
+    const prompt = fs.readFileSync(path.join(REPO_ROOT, promptPath), 'utf8');
+    assert.equal(syncPrompt(prompt, vocab), prompt, promptPath);
+  }
+});
+
+test('promptWeb_committed_hasVocabMarkersAndRewriteRule', () => {
+  const text = fs.readFileSync(path.join(REPO_ROOT, 'extraction/prompt-web.md'), 'utf8');
+  assert.match(text, /<!-- vocab:start -->[\s\S]*<!-- vocab:end -->/);
+  assert.match(text, /自己嘅說話/);
 });
