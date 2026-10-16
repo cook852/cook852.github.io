@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {checkRecipe, checkCategory, checkAll} from './check-recipes.mjs';
+import {checkRecipe, checkCategory, checkAll, recipeWarnings} from './check-recipes.mjs';
 
 const VALID = `---
 title: 番茄炒蛋
@@ -111,4 +111,13 @@ test('checkAll_chineseFolderAndIndex_reportsBoth', () => {
   const errors = checkAll(root);
   assert.ok(matches(errors, /湯\/index\.md.*檔名/));
   assert.ok(matches(errors, /_category_\.json.*link\.slug/));
+});
+
+test('recipeWarnings_draftTrue_warnsDraft', () => {
+  const source = VALID.replace('tags:', 'draft: true\ntags:');
+  assert.ok(matches(recipeWarnings(PATH, source), /draft/));
+});
+
+test('recipeWarnings_noDraft_returnsEmpty', () => {
+  assert.deepEqual(recipeWarnings(PATH, VALID), []);
 });

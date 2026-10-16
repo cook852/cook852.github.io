@@ -70,6 +70,12 @@ export function checkRecipe(relPath, source) {
   return errors;
 }
 
+// Not errors: drafts are allowed in the repo, they just stay off the live site.
+export function recipeWarnings(relPath, source) {
+  const {data} = matter(source);
+  return data.draft === true ? [`${relPath}: 仲係 draft: true，正式網站唔會顯示`] : [];
+}
+
 export function checkCategory(relPath, source) {
   const {link} = JSON.parse(source);
   if (link?.type === 'generated-index' && !ASCII_SLUG.test(String(link.slug ?? ''))) {
@@ -86,6 +92,13 @@ function listFiles(dir, base = dir) {
   });
 }
 
+export function warnAll(rootDir = 'recipes') {
+  const root = path.resolve(REPO_ROOT, rootDir);
+  return listFiles(root)
+    .filter((relPath) => /\.mdx?$/.test(relPath) && path.posix.basename(relPath) !== 'index.md')
+    .flatMap((relPath) => recipeWarnings(relPath, fs.readFileSync(path.join(root, relPath), 'utf8')));
+}
+
 export function checkAll(rootDir = 'recipes') {
   const root = path.resolve(REPO_ROOT, rootDir);
   const read = (relPath) => fs.readFileSync(path.join(root, relPath), 'utf8');
@@ -100,6 +113,7 @@ export function checkAll(rootDir = 'recipes') {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  for (const warning of warnAll()) console.warn(`⚠ ${warning}`);
   const errors = checkAll();
   for (const error of errors) console.error(`✗ ${error}`);
   if (errors.length > 0) process.exit(1);
