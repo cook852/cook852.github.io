@@ -1,6 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {checkRecipe, checkAll} from './check-recipes.mjs';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {checkRecipe, checkCategory, checkAll} from './check-recipes.mjs';
 
 const VALID = `---
 title: 番茄炒蛋
@@ -71,4 +74,41 @@ test('checkRecipe_methodNotOrderedList_reportsList', () => {
 
 test('checkAll_sampleRecipes_returnsNoErrors', () => {
   assert.deepEqual(checkAll(), []);
+});
+
+test('checkRecipe_nonAsciiSlug_reportsSlug', () => {
+  const source = VALID.replace('difficulty: 易\n', 'difficulty: 易\nslug: /番茄炒蛋\n');
+  assert.ok(matches(checkRecipe(PATH, source), /slug/));
+});
+
+test('checkRecipe_nonAsciiId_reportsId', () => {
+  const source = VALID.replace('difficulty: 易\n', 'difficulty: 易\nid: 番茄炒蛋\n');
+  assert.ok(matches(checkRecipe(PATH, source), /id/));
+});
+
+const category = (link) => JSON.stringify({label: '小食', position: 6, link});
+
+test('checkCategory_validSlug_returnsNoErrors', () => {
+  const source = category({type: 'generated-index', slug: '/category/xiao-shi'});
+  assert.deepEqual(checkCategory('xiao-shi/_category_.json', source), []);
+});
+
+test('checkCategory_missingSlug_reportsSlug', () => {
+  const source = category({type: 'generated-index'});
+  assert.ok(matches(checkCategory('xiao-shi/_category_.json', source), /link\.slug/));
+});
+
+test('checkCategory_nonAsciiSlug_reportsSlug', () => {
+  const source = category({type: 'generated-index', slug: '/category/小食'});
+  assert.ok(matches(checkCategory('xiao-shi/_category_.json', source), /link\.slug/));
+});
+
+test('checkAll_chineseFolderAndIndex_reportsBoth', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'recipes-'));
+  fs.mkdirSync(path.join(root, '湯'));
+  fs.writeFileSync(path.join(root, '湯', 'index.md'), '# 湯\n');
+  fs.writeFileSync(path.join(root, '湯', '_category_.json'), category({type: 'generated-index'}));
+  const errors = checkAll(root);
+  assert.ok(matches(errors, /湯\/index\.md.*檔名/));
+  assert.ok(matches(errors, /_category_\.json.*link\.slug/));
 });

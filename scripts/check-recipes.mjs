@@ -12,16 +12,25 @@ const DIFFICULTIES = ['易', '中', '難'];
 const SECTION_ORDER = ['材料', '調味料', '做法', '小貼士'];
 const REQUIRED_SECTIONS = ['材料', '做法'];
 const ASCII_PATH = /^[a-z0-9-]+(\/[a-z0-9-]+)*\.mdx?$/;
+const ASCII_SLUG = /^\/?[a-z0-9-]+(\/[a-z0-9-]+)*$/;
+
+function checkPath(relPath) {
+  return ASCII_PATH.test(relPath)
+    ? []
+    : [`${relPath}: 檔名同資料夾名只可以用細楷英文字母、數字同 "-"（例如 fan-qie-chao-dan.md）`];
+}
 
 export function checkRecipe(relPath, source) {
-  const errors = [];
+  const errors = checkPath(relPath);
   const where = relPath;
 
-  if (!ASCII_PATH.test(relPath)) {
-    errors.push(`${where}: 檔名同資料夾名只可以用細楷英文字母、數字同 "-"（例如 fan-qie-chao-dan.md）`);
-  }
-
   const {data, content} = matter(source);
+
+  for (const field of ['slug', 'id']) {
+    if (data[field] !== undefined && !ASCII_SLUG.test(String(data[field]))) {
+      errors.push(`${where}: frontmatter "${field}" 只可以用細楷英文字母、數字、"-" 同 "/"`);
+    }
+  }
 
   for (const field of REQUIRED_FIELDS) {
     if (data[field] === undefined || data[field] === null || String(data[field]).trim() === '') {
@@ -61,20 +70,33 @@ export function checkRecipe(relPath, source) {
   return errors;
 }
 
-function listRecipeFiles(dir, base = dir) {
+export function checkCategory(relPath, source) {
+  const {link} = JSON.parse(source);
+  if (link?.type === 'generated-index' && !ASCII_SLUG.test(String(link.slug ?? ''))) {
+    return [`${relPath}: generated-index 一定要設定英文 link.slug（例如 "/category/jia-chang"），否則網址會變成中文亂碼`];
+  }
+  return [];
+}
+
+function listFiles(dir, base = dir) {
   return fs.readdirSync(dir, {withFileTypes: true}).flatMap((entry) => {
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) return listRecipeFiles(full, base);
-    if (!/\.mdx?$/.test(entry.name) || entry.name === 'index.md') return [];
+    if (entry.isDirectory()) return listFiles(full, base);
     return [path.relative(base, full).split(path.sep).join('/')];
   });
 }
 
 export function checkAll(rootDir = 'recipes') {
   const root = path.resolve(REPO_ROOT, rootDir);
-  return listRecipeFiles(root).flatMap((relPath) =>
-    checkRecipe(relPath, fs.readFileSync(path.join(root, relPath), 'utf8')),
-  );
+  const read = (relPath) => fs.readFileSync(path.join(root, relPath), 'utf8');
+  return listFiles(root).flatMap((relPath) => {
+    const name = path.posix.basename(relPath);
+    if (name === '_category_.json') return checkCategory(relPath, read(relPath));
+    if (!/\.mdx?$/.test(name)) return [];
+    // Index pages aren't recipes, but their URL still comes from the path.
+    if (name === 'index.md') return checkPath(relPath);
+    return checkRecipe(relPath, read(relPath));
+  });
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
