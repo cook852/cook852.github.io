@@ -17,7 +17,7 @@ const ASCII_SLUG = /^\/?[a-z0-9-]+(\/[a-z0-9-]+)*$/;
 function checkPath(relPath) {
   return ASCII_PATH.test(relPath)
     ? []
-    : [`${relPath}: 檔名同資料夾名只可以用細楷英文字母、數字同 "-"（例如 fan-qie-chao-dan.md）`];
+    : [`${relPath}: 檔名同資料夾名只可以用細楷英文字母、數字同 "-"（例如 tomato-scrambled-eggs.md）`];
 }
 
 export function checkRecipe(relPath, source) {
@@ -73,7 +73,7 @@ export function checkRecipe(relPath, source) {
 export function checkCategory(relPath, source) {
   const {link} = JSON.parse(source);
   if (link?.type === 'generated-index' && !ASCII_SLUG.test(String(link.slug ?? ''))) {
-    return [`${relPath}: generated-index 一定要設定英文 link.slug（例如 "/category/jia-chang"），否則網址會變成中文亂碼`];
+    return [`${relPath}: generated-index 一定要設定英文 link.slug（例如 "/category/home-style"），否則網址會變成中文亂碼`];
   }
   return [];
 }

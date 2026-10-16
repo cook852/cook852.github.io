@@ -12,7 +12,7 @@ servings: 2
 prep_time: 5 分鐘
 cook_time: 5 分鐘
 difficulty: 易
-tags: [jia-chang]
+tags: [home-style]
 ---
 
 ## 材料
@@ -33,7 +33,7 @@ tags: [jia-chang]
 蛋唔好炒得太老。
 `;
 
-const PATH = 'jia-chang/fan-qie-chao-dan.md';
+const PATH = 'home-style/tomato-scrambled-eggs.md';
 
 const matches = (errors, re) => errors.some((e) => re.test(e));
 
@@ -42,7 +42,7 @@ test('checkRecipe_validRecipe_returnsNoErrors', () => {
 });
 
 test('checkRecipe_nonAsciiPath_reportsFilename', () => {
-  assert.ok(matches(checkRecipe('jia-chang/番茄炒蛋.md', VALID), /檔名/));
+  assert.ok(matches(checkRecipe('home-style/番茄炒蛋.md', VALID), /檔名/));
 });
 
 test('checkRecipe_missingServings_reportsField', () => {

@@ -5,7 +5,7 @@ servings: 4
 prep_time: 15 分鐘
 cook_time: 1 小時 30 分鐘
 difficulty: 易
-tags: [tang-shui, zhu-rou, jia-chang]
+tags: [soup, pork, home-style]
 sidebar_position: 1
 ---
 

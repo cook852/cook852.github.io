@@ -11,11 +11,11 @@ type Category = {
 
 // Keep in sync with recipes/<folder>/_category_.json
 const CATEGORIES: Category[] = [
-  {label: '家常小菜', emoji: '🍳', folder: 'jia-chang'},
-  {label: '湯水', emoji: '🍲', folder: 'tang'},
-  {label: '點心', emoji: '🥟', folder: 'dian-xin'},
-  {label: '粥粉麵飯', emoji: '🍜', folder: 'fan-mian'},
-  {label: '甜品', emoji: '🍮', folder: 'tian-pin'},
+  {label: '家常小菜', emoji: '🍳', folder: 'home-style'},
+  {label: '湯水', emoji: '🍲', folder: 'soup'},
+  {label: '點心', emoji: '🥟', folder: 'dim-sum'},
+  {label: '粥粉麵飯', emoji: '🍜', folder: 'rice-and-noodles'},
+  {label: '甜品', emoji: '🍮', folder: 'dessert'},
 ];
 
 function useRecipeCounts(): Record<string, number> {

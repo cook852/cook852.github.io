@@ -5,7 +5,7 @@ servings: 2
 prep_time: 5 分鐘
 cook_time: 10 分鐘
 difficulty: 易
-tags: [jia-chang, ji-dan, zheng]
+tags: [home-style, egg, steamed]
 sidebar_position: 2
 ---
 

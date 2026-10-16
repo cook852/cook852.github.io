@@ -5,7 +5,7 @@ servings: 2
 prep_time: 5 分鐘
 cook_time: 5 分鐘
 difficulty: 易
-tags: [jia-chang, ji-dan, kuai-shou]
+tags: [home-style, egg, quick]
 sidebar_position: 1
 ---
 

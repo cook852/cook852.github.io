@@ -1,24 +1,24 @@
-jia-chang:
+home-style:
   label: 家常
-  permalink: /jia-chang
+  permalink: /home-style
   description: 簡單易煮嘅家常菜
-ji-dan:
+egg:
   label: 雞蛋
-  permalink: /ji-dan
+  permalink: /egg
   description: 用雞蛋做主角嘅菜式
-kuai-shou:
+quick:
   label: 快手菜
-  permalink: /kuai-shou
+  permalink: /quick
   description: 十五分鐘內煮好
-zheng:
+steamed:
   label: 蒸
-  permalink: /zheng
+  permalink: /steamed
   description: 蒸煮菜式
-tang-shui:
+soup:
   label: 湯水
-  permalink: /tang-shui
+  permalink: /soup
   description: 各式湯水
-zhu-rou:
+pork:
   label: 豬肉
-  permalink: /zhu-rou
+  permalink: /pork
   description: 用豬肉嘅菜式

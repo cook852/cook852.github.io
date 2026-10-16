@@ -15,8 +15,8 @@ npm run serve      # 預覽正式版本（搜尋功能只喺呢度先用到）
 
 ## 新增食譜
 
-1. 複製 `templates/recipe-template.md` 去 `recipes/` 入面啱嘅分類資料夾，例如 `recipes/jia-chang/`。
-2. **檔名只可以用細楷英文、數字同 `-`**（例如 `ma-po-dou-fu.md`），中文菜名寫喺 `title`。
+1. 複製 `templates/recipe-template.md` 去 `recipes/` 入面啱嘅分類資料夾，例如 `recipes/home-style/`。
+2. **檔名只可以用細楷英文、數字同 `-`**（例如 `mapo-tofu.md`），中文菜名寫喺 `title`。
 3. 填好 frontmatter（`title`、`description`、`servings`、`prep_time`、`cook_time`、`difficulty`，份量／時間／難度會自動顯示喺標題下面）同段落：
    `## 材料` → `## 調味料`（可選）→ `## 做法`（用 1. 2. 3. 列步驟）→ `## 小貼士`（可選）。
 4. `tags` 只可以用 `recipes/tags.yml` 入面已有嘅 key；要新標籤就先喺 `tags.yml` 加。
@@ -28,7 +28,7 @@ npm run serve      # 預覽正式版本（搜尋功能只喺呢度先用到）
 
 ## 新增分類
 
-1. 喺 `recipes/` 開新資料夾（英文檔名），加 `_category_.json`，參考 `recipes/jia-chang/_category_.json`，記得設定 `link.slug`。
+1. 喺 `recipes/` 開新資料夾（英文檔名），加 `_category_.json`，參考 `recipes/home-style/_category_.json`，記得設定 `link.slug`。
 2. 喺 `src/components/CategoryGrid/index.tsx` 嘅 `CATEGORIES` 加一行，首頁先會顯示。
 
 ## 部署

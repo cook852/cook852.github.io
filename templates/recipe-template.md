@@ -5,7 +5,7 @@ servings: 2
 prep_time: 10 分鐘
 cook_time: 15 分鐘
 difficulty: 易   # 易 / 中 / 難
-tags: [jia-chang]   # 用 recipes/tags.yml 入面嘅 key
+tags: [home-style]   # 用 recipes/tags.yml 入面嘅 key
 ---
 
 ## 材料
