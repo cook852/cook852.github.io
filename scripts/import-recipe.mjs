@@ -133,9 +133,24 @@ export function renderRecipe(draft) {
 const at = (timestamp) => `（${timestamp || '—'}）`;
 
 export function renderReview(draft) {
+  const items = [...draft.ingredients, ...draft.seasonings];
+  // Webpage drafts have no timestamps; list a check against the page instead.
+  const timed = [...items, ...draft.steps, ...draft.uncertain].some((x) => x.timestamp);
+  const when = (timestamp) => (timed ? at(timestamp) : '');
   const uncertain = draft.uncertain.length
-    ? draft.uncertain.map((u) => `- [ ] ${u.field}：${u.issue}${at(u.timestamp)}`)
+    ? draft.uncertain.map((u) => `- [ ] ${u.field}：${u.issue}${when(u.timestamp)}`)
     : ['- 冇'];
+  const sources = timed
+    ? [
+        '## 材料時間點',
+        '',
+        ...items.map((x) => `- ${x.name} ${x.amount}${at(x.timestamp)}`),
+        '',
+        '## 步驟時間點',
+        '',
+        ...draft.steps.map((s, i) => `${i + 1}. ${s.text}${at(s.timestamp)}`),
+      ]
+    : ['## 對照原網頁', '', `- [ ] 份量、步驟同原網頁一致（${draft.source.url || '—'}）`];
   return [
     `# 審稿清單：${draft.title}（${draft.source.url || '—'}）`,
     '',
@@ -143,13 +158,7 @@ export function renderReview(draft) {
     '',
     ...uncertain,
     '',
-    '## 材料時間點',
-    '',
-    ...[...draft.ingredients, ...draft.seasonings].map((x) => `- ${x.name} ${x.amount}${at(x.timestamp)}`),
-    '',
-    '## 步驟時間點',
-    '',
-    ...draft.steps.map((s, i) => `${i + 1}. ${s.text}${at(s.timestamp)}`),
+    ...sources,
     '',
   ].join('\n');
 }
@@ -246,5 +255,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   }
   console.log(`✓ 已建立 ${result.recipePath}（draft）`);
   console.log(`審稿清單：${path.relative(process.cwd(), result.reviewPath)}`);
-  console.log('下一步：npm start 睇下，對住影片改好，再刪 draft: true');
+  console.log('下一步：npm start 睇下，對住來源（影片或網頁）改好，再刪 draft: true');
 }

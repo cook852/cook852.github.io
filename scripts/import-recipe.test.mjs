@@ -124,7 +124,7 @@ test('renderReview_missingTimestamps_neverPrintsUndefined', () => {
   }
   const out = renderReview(normalizeDraft(d));
   assert.ok(!out.includes('undefined'));
-  assert.ok(out.includes('- [ ] seasonings[0].amount：影片冇講清楚份量（—）'));
+  assert.ok(out.includes('- [ ] seasonings[0].amount：影片冇講清楚份量\n'));
 });
 
 test('dictGaps_duplicateIngredient_reportsOnce', () => {
@@ -244,4 +244,25 @@ test('validateDraft_wrongTypes_returnsErrorsWithoutThrowing', () => {
 test('importRecipe_nullJson_returnsErrorWithoutThrowing', () => {
   const {root, draftPath} = tempRepo(null, 'null');
   assert.ok(importRecipe(draftPath, {repoRoot: root}).errors.length > 0);
+});
+
+const webDraft = () => {
+  const d = draft({source: {url: 'https://example.com/r', title: '蒸肉餅', channel: 'Example'}});
+  for (const x of [...d.ingredients, ...d.seasonings, ...d.steps, ...d.uncertain]) x.timestamp = '';
+  return d;
+};
+
+test('renderReview_noTimestamps_omitsTimestampSectionsAndAddsSourceCheck', () => {
+  const out = renderReview(normalizeDraft(webDraft()));
+  assert.doesNotMatch(out, /時間點/);
+  assert.doesNotMatch(out, /（—）/);
+  assert.match(out, /對照原網頁[\s\S]*example\.com\/r/);
+  assert.match(out, /影片冇講清楚份量/);
+});
+
+test('renderReview_withTimestamps_unchanged', () => {
+  const out = renderReview(normalizeDraft(draft()));
+  assert.match(out, /## 材料時間點/);
+  assert.match(out, /（00:30）/);
+  assert.doesNotMatch(out, /對照原網頁/);
 });
