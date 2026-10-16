@@ -14,7 +14,8 @@
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
     "test": "node --test \"scripts/*.test.mjs\"",
-    "check:recipes": "node scripts/check-recipes.mjs"
+    "check:recipes": "node scripts/check-recipes.mjs",
+    "sync:extraction": "node scripts/sync-extraction.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",

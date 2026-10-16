@@ -1,0 +1,232 @@
+{
+  "type": "object",
+  "properties": {
+    "source": {
+      "type": "object",
+      "description": "The video this recipe comes from",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Video URL"
+        },
+        "title": {
+          "type": "string",
+          "description": "Video title as shown on the page"
+        },
+        "channel": {
+          "type": "string",
+          "description": "Channel or creator name"
+        }
+      },
+      "required": [
+        "url",
+        "title",
+        "channel"
+      ]
+    },
+    "slug": {
+      "type": "string",
+      "description": "English kebab-case, e.g. steamed-minced-pork; never pinyin or Cantonese romanization"
+    },
+    "category": {
+      "type": "string",
+      "description": "One of the allowed categories",
+      "enum": [
+        "dessert",
+        "dim-sum",
+        "home-style",
+        "rice-and-noodles",
+        "soup"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "description": "Dish name in Traditional Chinese, HK wording"
+    },
+    "description": {
+      "type": "string",
+      "description": "One sentence on what makes the dish good, Traditional Chinese"
+    },
+    "servings": {
+      "type": "integer",
+      "description": "Number of people"
+    },
+    "prep_time": {
+      "type": "string",
+      "description": "e.g. 10 分鐘"
+    },
+    "cook_time": {
+      "type": "string",
+      "description": "e.g. 1 小時 30 分鐘"
+    },
+    "difficulty": {
+      "type": "string",
+      "description": "易 / 中 / 難",
+      "enum": [
+        "易",
+        "中",
+        "難"
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "description": "Only from the allowed tags",
+      "items": {
+        "type": "string",
+        "enum": [
+          "home-style",
+          "egg",
+          "quick",
+          "steamed",
+          "soup",
+          "pork"
+        ]
+      }
+    },
+    "suggested_new_tags": {
+      "type": "array",
+      "description": "Tags you would want but that are not allowed yet; never put these in tags",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "English kebab-case key"
+          },
+          "label": {
+            "type": "string",
+            "description": "Traditional Chinese label"
+          }
+        },
+        "required": [
+          "key",
+          "label"
+        ]
+      }
+    },
+    "ingredients": {
+      "type": "array",
+      "description": "Main ingredients",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "HK name, e.g. 薯仔, 番茄, 粟粉"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Metric or HK kitchen units, e.g. 500 克, 3 片; 適量 if the video does not say"
+          },
+          "note": {
+            "type": "string",
+            "description": "Optional prep note, e.g. 切絲"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "mm:ss where it appears in the video"
+          }
+        },
+        "required": [
+          "name",
+          "amount"
+        ]
+      }
+    },
+    "seasonings": {
+      "type": "array",
+      "description": "Seasonings and sauces",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "HK name, e.g. 生抽, 蠔油"
+          },
+          "amount": {
+            "type": "string",
+            "description": "e.g. 1 湯匙; 適量 if the video does not say"
+          },
+          "note": {
+            "type": "string",
+            "description": "Optional note"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "mm:ss where it appears in the video"
+          }
+        },
+        "required": [
+          "name",
+          "amount"
+        ]
+      }
+    },
+    "steps": {
+      "type": "array",
+      "description": "Method, rewritten in short imperative sentences",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "One step, own words, not a transcript"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "mm:ss where the step starts"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      }
+    },
+    "tips": {
+      "type": "array",
+      "description": "Short tips from the video",
+      "items": {
+        "type": "string"
+      }
+    },
+    "uncertain": {
+      "type": "array",
+      "description": "Anything you could not see or hear clearly, or amounts the video did not give",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Which field, e.g. ingredients[2].amount"
+          },
+          "issue": {
+            "type": "string",
+            "description": "What is unclear"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "mm:ss to check"
+          }
+        },
+        "required": [
+          "field",
+          "issue"
+        ]
+      }
+    }
+  },
+  "required": [
+    "source",
+    "slug",
+    "category",
+    "title",
+    "description",
+    "servings",
+    "prep_time",
+    "cook_time",
+    "difficulty",
+    "tags",
+    "ingredients",
+    "steps"
+  ]
+}
