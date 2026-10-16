@@ -43,9 +43,9 @@ npm run serve      # 預覽正式版本（搜尋功能只喺呢度先用到）
 
 用 Gemini 讀食譜網頁，用自己嘅說話改寫成香港家常講法，再用同一個指令轉做食譜檔。
 
-1. **下載**：`npm run fetch:recipe -- <網址>`
+1. **下載**：`npm run fetch:recipe -- '<網址>'`（網址要用單引號包住，因為網址入面嘅 `&`、`?` 會令指令出錯）
    - 會建立 `drafts/page-xxxxxxxx.page.md`，入面已經有 `extraction/prompt-web.md` 嘅指示、來源網址同網頁內容（有結構化食譜資料會一齊放入）。
-   - 網站唔俾下載（例如 403）：喺瀏覽器「另存網頁」做 `.html`，再執行 `npm run fetch:recipe -- <網址> --html <檔案>`。
+   - 網站唔俾下載（例如 403）：喺瀏覽器「另存網頁」做 `.html`，再執行 `npm run fetch:recipe -- '<網址>' --html <檔案>`。
 2. **抽取**：開 Google AI Studio，喺 Structured output 貼入 `extraction/recipe.schema.json`，再貼 `page.md` 全部內容。將輸出存做 `drafts/<slug>.json`。Gemini 會改寫步驟，唔會照抄原文。
 3. **轉換**：`npm run import:recipe -- drafts/<slug>.json`（同影片一樣，選項見上面）。審稿清單會提你對住原網頁檢查。
 4. **審稿同發佈**：同影片嘅第 3、4 步一樣。

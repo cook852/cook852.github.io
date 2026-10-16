@@ -5,7 +5,11 @@
 export const MAX_PAGE_CHARS = 30000;
 
 // <header> is kept: blog posts often put the recipe title in an article header.
-const DROPPED_ELEMENTS = ['script', 'style', 'noscript', 'svg', 'template', 'iframe', 'nav', 'footer', 'aside', 'form'];
+// <form> is kept too: ASP.NET WebForms sites wrap the whole page in one.
+const DROPPED_ELEMENTS = [
+  'script', 'style', 'noscript', 'svg', 'template', 'iframe',
+  'nav', 'footer', 'aside', 'button', 'select', 'textarea',
+];
 const NAMED_ENTITIES = {amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' '};
 
 function charsetOf(text) {
@@ -77,6 +81,7 @@ export function htmlToText(html) {
   }
   text = text
     .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(td|th|dt|dd)>/gi, ' ')
     .replace(/<\/(p|div|li|h[1-6]|tr|section|article|header|ul|ol|table|blockquote)>/gi, '\n')
     .replace(/<[^>]+>/g, '');
   const lines = decodeEntities(text)

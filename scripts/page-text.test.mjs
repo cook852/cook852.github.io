@@ -67,3 +67,13 @@ test('htmlToText_overCap_truncatesAndFlags', () => {
   assert.equal(r.text.length, MAX_PAGE_CHARS);
   assert.equal(r.truncated, true);
 });
+
+test('htmlToText_webFormsPageWrappedInForm_keepsBody', () => {
+  const html = '<body><form id="form1" runat="server"><h1>蒸肉餅</h1><p>豬肉 300 克</p><input type="hidden" value="x"><button>搜尋</button></form></body>';
+  assert.equal(htmlToText(html).text, '蒸肉餅\n豬肉 300 克');
+});
+
+test('htmlToText_tableAndDefinitionCells_keepNameAndAmountApart', () => {
+  assert.equal(htmlToText('<table><tr><td>雞蛋</td><td>2 隻</td></tr></table>').text, '雞蛋 2 隻');
+  assert.equal(htmlToText('<dl><dt>豬肉</dt><dd>300 克</dd></dl>').text, '豬肉 300 克');
+});
