@@ -1,5 +1,14 @@
 // Turns a Gemini extraction (drafts/<slug>.json) into a draft recipe page.
 // Usage: npm run import:recipe -- drafts/<slug>.json [--force] [--add-dict]
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {checkRecipe} from './check-recipes.mjs';
+import {loadVocabulary} from './sync-extraction.mjs';
+import {wordingWarnings} from './hk-wording.mjs';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const DICT_PATH = 'search/zh-user-dict.txt';
 
 const REQUIRED_FIELDS = ['slug', 'category', 'title', 'description', 'servings', 'prep_time', 'cook_time', 'difficulty'];
 const DIFFICULTIES = ['易', '中', '難'];
@@ -118,4 +127,93 @@ export function dictGaps(draft, dictText) {
   const known = new Set(dictText.split('\n').map((line) => line.trim().split(/\s+/)[0]).filter(Boolean));
   const names = [...new Set([...draft.ingredients, ...(draft.seasonings ?? [])].map((x) => x.name.trim()))];
   return names.filter((name) => !known.has(name)).map((name) => `${name} 1000 n`);
+}
+
+// Gemini's chat UI wraps JSON in a ```json fence when copied.
+export function parseDraftText(text) {
+  const unfenced = text.trim().replace(/^```[a-z]*\s*\n/i, '').replace(/\n?```$/, '');
+  try {
+    return JSON.parse(unfenced);
+  } catch (e) {
+    throw new Error(`JSON 格式錯誤：${e.message}`);
+  }
+}
+
+function humanText(draft) {
+  return [
+    draft.title,
+    draft.description,
+    ...[...draft.ingredients, ...draft.seasonings].flatMap((x) => [x.name, x.amount, x.note]),
+    ...draft.steps.map((s) => s.text),
+    ...draft.tips,
+  ].join('\n');
+}
+
+export function importRecipe(draftPath, {repoRoot = REPO_ROOT, force = false, addDict = false} = {}) {
+  const result = {recipePath: '', reviewPath: '', errors: [], warnings: [], newTags: [], dictLines: []};
+  let raw;
+  try {
+    raw = parseDraftText(fs.readFileSync(draftPath, 'utf8'));
+  } catch (e) {
+    result.errors.push(e.message);
+    return result;
+  }
+
+  result.errors = validateDraft(raw, loadVocabulary(repoRoot));
+  if (result.errors.length > 0) return result;
+  const draft = normalizeDraft(raw);
+
+  const relPath = `${draft.category}/${draft.slug}.md`;
+  result.recipePath = `recipes/${relPath}`;
+  result.reviewPath = path.join(path.dirname(draftPath), `${draft.slug}.review.md`);
+  const target = path.join(repoRoot, result.recipePath);
+  if (fs.existsSync(target) && !force) {
+    result.errors.push(`${result.recipePath} 已經存在，要覆蓋請加 --force`);
+    return result;
+  }
+
+  const recipe = renderRecipe(draft);
+  // Errors here mean renderRecipe is wrong, not the draft.
+  result.errors = checkRecipe(relPath, recipe);
+  if (result.errors.length > 0) return result;
+
+  result.warnings = wordingWarnings(humanText(draft));
+  result.newTags = draft.suggested_new_tags;
+  fs.writeFileSync(target, recipe);
+  fs.writeFileSync(result.reviewPath, renderReview(draft));
+
+  const dictFile = path.join(repoRoot, DICT_PATH);
+  const dictText = fs.readFileSync(dictFile, 'utf8');
+  result.dictLines = dictGaps(draft, dictText);
+  if (addDict && result.dictLines.length > 0) {
+    const separator = dictText === '' || dictText.endsWith('\n') ? '' : '\n';
+    fs.appendFileSync(dictFile, `${separator}${result.dictLines.join('\n')}\n`);
+  }
+  return result;
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const args = process.argv.slice(2);
+  const draftArg = args.find((a) => !a.startsWith('--'));
+  if (!draftArg) {
+    console.error('✗ 用法：npm run import:recipe -- drafts/<slug>.json [--force] [--add-dict]');
+    process.exit(1);
+  }
+  const addDict = args.includes('--add-dict');
+  const result = importRecipe(path.resolve(draftArg), {force: args.includes('--force'), addDict});
+
+  for (const error of result.errors) console.error(`✗ ${error}`);
+  if (result.errors.length > 0) process.exit(1);
+  for (const warning of result.warnings) console.warn(`⚠ ${warning}`);
+  if (result.newTags.length > 0) {
+    console.log('新標籤建議（要用就先加入 recipes/tags.yml，再執行 npm run sync:extraction）：');
+    for (const {key, label} of result.newTags) console.log(`  ${key} — ${label}`);
+  }
+  if (result.dictLines.length > 0) {
+    console.log(addDict ? `已加入搜尋字典：${result.dictLines.join('、')}` : `搜尋字典未有（加 --add-dict 自動加入 ${DICT_PATH}）：`);
+    if (!addDict) for (const line of result.dictLines) console.log(`  ${line}`);
+  }
+  console.log(`✓ 已建立 ${result.recipePath}（draft）`);
+  console.log(`審稿清單：${path.relative(process.cwd(), result.reviewPath)}`);
+  console.log('下一步：npm start 睇下，對住影片改好，再刪 draft: true');
 }

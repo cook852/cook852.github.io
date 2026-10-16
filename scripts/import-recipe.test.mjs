@@ -1,9 +1,21 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import matter from 'gray-matter';
 import {checkRecipe} from './check-recipes.mjs';
 import {loadVocabulary} from './sync-extraction.mjs';
-import {normalizeDraft, validateDraft, renderRecipe, renderReview, dictGaps} from './import-recipe.mjs';
+import {
+  normalizeDraft,
+  validateDraft,
+  renderRecipe,
+  renderReview,
+  dictGaps,
+  parseDraftText,
+  importRecipe,
+} from './import-recipe.mjs';
 
 const DRAFT = {
   source: {url: 'https://www.youtube.com/watch?v=abc123', title: '蒸肉餅教學', channel: '阿媽廚房'},
@@ -125,4 +137,79 @@ test('dictGaps_duplicateIngredient_reportsOnce', () => {
 test('dictGaps_knownWord_skipped', () => {
   const d = draft({ingredients: [{name: '排骨', amount: '500 克'}], seasonings: []});
   assert.deepEqual(dictGaps(d, '排骨 1000 n\n'), []);
+});
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const RECIPE = 'recipes/home-style/steamed-minced-pork.md';
+
+// A throwaway copy of the bits of the repo importRecipe reads and writes.
+function tempRepo(draftValue = DRAFT, draftText = JSON.stringify(draftValue)) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'cook852-'));
+  fs.cpSync(path.join(REPO_ROOT, 'recipes'), path.join(root, 'recipes'), {recursive: true});
+  fs.mkdirSync(path.join(root, 'search'));
+  fs.copyFileSync(path.join(REPO_ROOT, 'search/zh-user-dict.txt'), path.join(root, 'search/zh-user-dict.txt'));
+  fs.mkdirSync(path.join(root, 'drafts'));
+  const draftPath = path.join(root, 'drafts/steamed-minced-pork.json');
+  fs.writeFileSync(draftPath, draftText);
+  return {root, draftPath};
+}
+
+test('parseDraftText_jsonCodeFence_parses', () => {
+  assert.deepEqual(parseDraftText('```json\n{"a":1}\n```\n'), {a: 1});
+});
+
+test('parseDraftText_invalidJson_throwsCantonese', () => {
+  assert.throws(() => parseDraftText('{nope'), /JSON 格式錯誤/);
+});
+
+test('importRecipe_validDraft_writesRecipeAndReview', () => {
+  const {root, draftPath} = tempRepo();
+  const result = importRecipe(draftPath, {repoRoot: root});
+  assert.deepEqual(result.errors, []);
+  const recipe = fs.readFileSync(path.join(root, RECIPE), 'utf8');
+  assert.deepEqual(checkRecipe('home-style/steamed-minced-pork.md', recipe), []);
+  assert.ok(fs.existsSync(path.join(root, 'drafts/steamed-minced-pork.review.md')));
+});
+
+test('importRecipe_existingRecipe_refusesAndLeavesFileUntouched', () => {
+  const {root, draftPath} = tempRepo();
+  fs.writeFileSync(path.join(root, RECIPE), 'sentinel');
+  const result = importRecipe(draftPath, {repoRoot: root});
+  assert.ok(matches(result.errors, /--force/));
+  assert.equal(fs.readFileSync(path.join(root, RECIPE), 'utf8'), 'sentinel');
+});
+
+test('importRecipe_existingRecipeWithForce_overwrites', () => {
+  const {root, draftPath} = tempRepo();
+  fs.writeFileSync(path.join(root, RECIPE), 'sentinel');
+  const result = importRecipe(draftPath, {repoRoot: root, force: true});
+  assert.deepEqual(result.errors, []);
+  assert.match(fs.readFileSync(path.join(root, RECIPE), 'utf8'), /title: 蒸肉餅/);
+});
+
+test('importRecipe_invalidDraft_writesNothing', () => {
+  const {root, draftPath} = tempRepo(draft({tags: ['bbq']}));
+  const result = importRecipe(draftPath, {repoRoot: root});
+  assert.ok(result.errors.length > 0);
+  assert.ok(!fs.existsSync(path.join(root, RECIPE)));
+  assert.ok(!fs.existsSync(path.join(root, 'drafts/steamed-minced-pork.review.md')));
+});
+
+test('importRecipe_simplifiedText_returnsWarningButWrites', () => {
+  const {root, draftPath} = tempRepo(draft({description: '好好味嘅鸡汤。'}));
+  const result = importRecipe(draftPath, {repoRoot: root});
+  assert.deepEqual(result.errors, []);
+  assert.ok(matches(result.warnings, /鸡/));
+  assert.ok(fs.existsSync(path.join(root, RECIPE)));
+});
+
+test('importRecipe_addDict_appendsMissingWordsOnce', () => {
+  const {root, draftPath} = tempRepo();
+  const dictFile = path.join(root, 'search/zh-user-dict.txt');
+  fs.writeFileSync(dictFile, fs.readFileSync(dictFile, 'utf8').trimEnd()); // no trailing newline
+  importRecipe(draftPath, {repoRoot: root, addDict: true});
+  importRecipe(draftPath, {repoRoot: root, addDict: true, force: true});
+  const lines = fs.readFileSync(dictFile, 'utf8').split('\n');
+  assert.equal(lines.filter((l) => l === '免治豬肉 1000 n').length, 1);
+  assert.ok(!lines.some((l) => /n免治豬肉/.test(l)));
 });

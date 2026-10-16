@@ -19,3 +19,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .superpowers/
+
+# Gemini extractions and review checklists (local only)
+/drafts
