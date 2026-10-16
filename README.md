@@ -4,7 +4,7 @@
 
 ## 本機運行
 
-需要 Node.js 20 或以上。
+需要 Node.js 22 或以上。
 
 ```bash
 npm install

@@ -6,7 +6,7 @@
 
 **Architecture:** A Docusaurus 3 classic-preset site in the repo root. The docs plugin is repointed from `docs/` to `recipes/`, so each recipe is one Markdown file and each category is one folder with a `_category_.json`. The blog is turned off. A small Node script checks every recipe's frontmatter and section headings, `npm run build` (with broken links set to throw) checks the site, and a GitHub Actions workflow builds and deploys to Pages on every push to `main`.
 
-**Tech Stack:** Docusaurus 3.x (latest 3.x on npm, TypeScript template), Node 20 LTS, `@easyops-cn/docusaurus-search-local` for offline Chinese search, `node:test` for the content check, GitHub Actions (`actions/upload-pages-artifact` and `actions/deploy-pages`).
+**Tech Stack:** Docusaurus 3.x (latest 3.x on npm, TypeScript template), Node 22 LTS, `@easyops-cn/docusaurus-search-local` for offline Chinese search, `node:test` for the content check, GitHub Actions (`actions/upload-pages-artifact` and `actions/deploy-pages`).
 
 **Spec:** None. The user asked for sensible defaults, and those defaults are written into Global Constraints below.
 
@@ -19,7 +19,7 @@
 - Recipe filenames and folder names are lowercase ASCII kebab-case (pinyin or English, e.g. `fan-qie-chao-dan.md`). Chinese appears only in `title` and in the content, so URLs are never percent-encoded.
 - `onBrokenLinks: 'throw'`, `onBrokenMarkdownLinks: 'throw'`.
 - Blog is disabled (`blog: false`).
-- Node `>=20` is set in `package.json` `engines`, and CI uses Node 20.
+- Node `>=22` is set in `package.json` `engines`, and CI uses Node 22 (Node 20 reached end of life in April 2026, and its `--test` has no glob support).
 
 ### Recipe format (exact)
 
