@@ -8,8 +8,6 @@ difficulty: 易   # 易 / 中 / 難
 tags: [jia-chang]   # 用 recipes/tags.yml 入面嘅 key
 ---
 
-**份量：** 2 人 · **準備：** 10 分鐘 · **烹調：** 15 分鐘 · **難度：** 易
-
 ## 材料
 
 - 材料 份量

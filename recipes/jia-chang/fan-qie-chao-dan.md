@@ -9,8 +9,6 @@ tags: [jia-chang, ji-dan, kuai-shou]
 sidebar_position: 1
 ---
 
-**份量：** 2 人 · **準備：** 5 分鐘 · **烹調：** 5 分鐘 · **難度：** 易
-
 ## 材料
 
 - 番茄 3 個（約 450 克）

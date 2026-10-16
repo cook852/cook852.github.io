@@ -9,8 +9,6 @@ tags: [jia-chang, ji-dan, zheng]
 sidebar_position: 2
 ---
 
-**份量：** 2 人 · **準備：** 5 分鐘 · **烹調：** 10 分鐘 · **難度：** 易
-
 ## 材料
 
 - 雞蛋 3 隻（約 150 克）

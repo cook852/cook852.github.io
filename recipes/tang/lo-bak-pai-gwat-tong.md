@@ -9,8 +9,6 @@ tags: [tang-shui, zhu-rou, jia-chang]
 sidebar_position: 1
 ---
 
-**份量：** 4 人 · **準備：** 15 分鐘 · **烹調：** 1 小時 30 分鐘 · **難度：** 易
-
 ## 材料
 
 - 白蘿蔔 1 條（約 800 克）

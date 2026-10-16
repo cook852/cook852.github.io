@@ -17,7 +17,7 @@ npm run serve      # 預覽正式版本（搜尋功能只喺呢度先用到）
 
 1. 複製 `templates/recipe-template.md` 去 `recipes/` 入面啱嘅分類資料夾，例如 `recipes/jia-chang/`。
 2. **檔名只可以用細楷英文、數字同 `-`**（例如 `ma-po-dou-fu.md`），中文菜名寫喺 `title`。
-3. 填好 frontmatter（`title`、`description`、`servings`、`prep_time`、`cook_time`、`difficulty`）同段落：
+3. 填好 frontmatter（`title`、`description`、`servings`、`prep_time`、`cook_time`、`difficulty`，份量／時間／難度會自動顯示喺標題下面）同段落：
    `## 材料` → `## 調味料`（可選）→ `## 做法`（用 1. 2. 3. 列步驟）→ `## 小貼士`（可選）。
 4. `tags` 只可以用 `recipes/tags.yml` 入面已有嘅 key；要新標籤就先喺 `tags.yml` 加。
 5. 執行 `npm run check:recipes` 檢查格式，再 `npm run build` 確認冇壞連結。
