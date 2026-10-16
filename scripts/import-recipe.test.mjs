@@ -15,6 +15,7 @@ import {
   dictGaps,
   parseDraftText,
   importRecipe,
+  REQUIRED_FIELDS,
 } from './import-recipe.mjs';
 
 const DRAFT = {
@@ -212,4 +213,35 @@ test('importRecipe_addDict_appendsMissingWordsOnce', () => {
   const lines = fs.readFileSync(dictFile, 'utf8').split('\n');
   assert.equal(lines.filter((l) => l === '免治豬肉 1000 n').length, 1);
   assert.ok(!lines.some((l) => /n免治豬肉/.test(l)));
+});
+
+test('recipeSchema_required_coversValidatorRequiredFields', () => {
+  const schema = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'extraction/recipe.schema.json'), 'utf8'));
+  for (const field of [...REQUIRED_FIELDS, 'tags', 'ingredients', 'steps']) {
+    assert.ok(schema.required.includes(field), `schema required is missing ${field}`);
+  }
+});
+
+test('renderRecipe_multilineDescription_roundTrips', () => {
+  const description = '第一句。\n第二句。';
+  assert.equal(matter(renderRecipe(draft({description}))).data.description, description);
+});
+
+test('validateDraft_wrongTypes_returnsErrorsWithoutThrowing', () => {
+  const cases = [
+    draft({tips: '一條貼士'}),
+    draft({tags: 'egg'}),
+    draft({uncertain: ['睇唔清']}),
+    draft({suggested_new_tags: ['beef']}),
+    draft({ingredients: [{name: 300, amount: '300 克'}]}),
+    draft({seasonings: 'salt'}),
+    draft({steps: ['蒸。']}),
+  ];
+  for (const d of cases) assert.ok(validateDraft(d, VOCAB).length > 0, JSON.stringify(d).slice(0, 80));
+  assert.ok(matches(validateDraft(draft({tags: 'egg'}), VOCAB), /tags.*列表/));
+});
+
+test('importRecipe_nullJson_returnsErrorWithoutThrowing', () => {
+  const {root, draftPath} = tempRepo(null, 'null');
+  assert.ok(importRecipe(draftPath, {repoRoot: root}).errors.length > 0);
 });

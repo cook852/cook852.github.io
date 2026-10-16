@@ -10,10 +10,10 @@ import {wordingWarnings} from './hk-wording.mjs';
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DICT_PATH = 'search/zh-user-dict.txt';
 
-const REQUIRED_FIELDS = ['slug', 'category', 'title', 'description', 'servings', 'prep_time', 'cook_time', 'difficulty'];
+export const REQUIRED_FIELDS = ['slug', 'category', 'title', 'description', 'servings', 'prep_time', 'cook_time', 'difficulty'];
 const DIFFICULTIES = ['易', '中', '難'];
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const SAFE_SCALAR = /^[^\s:#\[\]{}&*!|>'"%@`,?-][^:#]*$/;
+const SAFE_SCALAR = /^[^\s:#\[\]{}&*!|>'"%@`,?-][^:#\n\r]*$/;
 const YAML_LOOKALIKE = /^(true|false|yes|no|on|off|null|~|[-+]?[\d._]+)$/i;
 
 const blank = (value) => value === undefined || value === null || String(value).trim() === '';
@@ -32,7 +32,22 @@ export function normalizeDraft(draft) {
   };
 }
 
+const isObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value);
+const isText = (value) => typeof value === 'string' && value.trim() !== '';
+
+// Each list: whether it's required, and the text fields every item must have
+// (null means items are plain strings).
+const LISTS = {
+  ingredients: {required: true, fields: ['name', 'amount']},
+  seasonings: {required: false, fields: ['name', 'amount']},
+  steps: {required: true, fields: ['text']},
+  tips: {required: false, fields: null},
+  suggested_new_tags: {required: false, fields: ['key', 'label']},
+  uncertain: {required: false, fields: ['field', 'issue']},
+};
+
 export function validateDraft(draft, vocab) {
+  if (!isObject(draft)) return ['JSON 最外層要係物件 {…}'];
   const errors = [];
   for (const field of REQUIRED_FIELDS) {
     if (blank(draft[field])) errors.push(`缺少欄位 "${field}"`);
@@ -44,7 +59,7 @@ export function validateDraft(draft, vocab) {
     errors.push(`category "${draft.category}" 唔存在，只可以揀：${vocab.categories.join(', ')}`);
   }
   if (!Array.isArray(draft.tags)) {
-    errors.push('缺少欄位 "tags"');
+    errors.push(draft.tags === undefined ? '缺少欄位 "tags"' : 'tags 要係列表，例如 [home-style, pork]');
   } else {
     for (const tag of draft.tags.filter((t) => !vocab.tags.includes(t))) {
       errors.push(`標籤 "${tag}" 唔喺 recipes/tags.yml，要用就先加入 tags.yml 再執行 npm run sync:extraction`);
@@ -56,18 +71,34 @@ export function validateDraft(draft, vocab) {
   if (!blank(draft.servings) && !(Number.isInteger(draft.servings) && draft.servings > 0)) {
     errors.push(`servings 要係正整數，而家係 "${draft.servings}"`);
   }
-  if (!Array.isArray(draft.ingredients) || draft.ingredients.length === 0) errors.push('ingredients 唔可以冇嘢');
-  if (!Array.isArray(draft.steps) || draft.steps.length === 0) errors.push('steps 唔可以冇嘢');
 
-  for (const list of ['ingredients', 'seasonings']) {
-    (Array.isArray(draft[list]) ? draft[list] : []).forEach((item, i) => {
-      if (blank(item?.name)) errors.push(`${list}[${i}] 缺少 name`);
-      if (blank(item?.amount)) errors.push(`${list}[${i}]（${item?.name ?? ''}）冇份量：影片冇講就寫「適量」`);
+  for (const [list, {required, fields}] of Object.entries(LISTS)) {
+    const items = draft[list];
+    if (items === undefined && !required) continue;
+    if (!Array.isArray(items)) {
+      errors.push(`${list} 要係列表`);
+      continue;
+    }
+    if (required && items.length === 0) errors.push(`${list} 唔可以冇嘢`);
+    items.forEach((item, i) => {
+      if (fields === null) {
+        if (!isText(item)) errors.push(`${list}[${i}] 要係文字`);
+        return;
+      }
+      if (!isObject(item)) {
+        errors.push(`${list}[${i}] 要係物件，有 ${fields.join('、')}`);
+        return;
+      }
+      for (const field of fields) {
+        if (isText(item[field])) continue;
+        errors.push(
+          field === 'amount'
+            ? `${list}[${i}]（${item.name ?? ''}）冇份量：影片冇講就寫「適量」`
+            : `${list}[${i}] 缺少 ${field}`,
+        );
+      }
     });
   }
-  (Array.isArray(draft.steps) ? draft.steps : []).forEach((step, i) => {
-    if (blank(step?.text)) errors.push(`steps[${i}] 缺少 text`);
-  });
   return errors;
 }
 
