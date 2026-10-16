@@ -14,13 +14,14 @@ Traditional Chinese wording. Remembering them is not enough.
   same shape of data.
 - One command that turns that data into a valid `recipes/<category>/<slug>.md`.
 - Nothing reaches the live site without a human check against the video.
-- Credit the source video on the page.
 
 ## Non-goals
 
 - No crawling and no bulk import of whole channels.
 - No auto-publishing. Every recipe gets a human review and a manual commit.
 - No AI images or step photos (for now).
+- No source-video credit on the page in this version. The video URL is kept
+  only in `drafts/` (the JSON and the review checklist).
 
 ## Anti-goals (failures even if it "works")
 
@@ -30,7 +31,7 @@ Traditional Chinese wording. Remembering them is not enough.
   The site uses 薯仔, 番茄 and 粟粉.
 - Pinyin or Cantonese-romanized slugs or tags (see `CLAUDE.md`).
 - Copying the creator's narration word for word. Steps are rewritten in our
-  own words, and the source is credited.
+  own words.
 
 ## Pipeline
 
@@ -131,10 +132,9 @@ schema never goes stale.
 4. **Render** the Markdown in the template's layout: frontmatter, then
    `## 材料`, `## 調味料` (only if there are any), `## 做法` as a numbered
    list, and `## 小貼士` (only if there are any). Write ingredient lines as
-   `- {name} {amount}（{note}）`. Add these to the frontmatter:
-   - `draft: true` (Docusaurus leaves it out of production builds, but
-     `npm start` still shows it)
-   - `source_url`, `source_title`, `source_channel`
+   `- {name} {amount}（{note}）`. Add `draft: true` to the frontmatter
+   (Docusaurus leaves it out of production builds, but `npm start` still
+   shows it).
 5. **Refuse to overwrite** an existing recipe unless `--force` is passed.
 6. **Run `checkRecipe()`** from `check-recipes.mjs` on the output, so both
    paths share one rule set.
@@ -161,19 +161,15 @@ Actions workflow tests and deploys.
 
 ## Site changes needed
 
-- **Source credit:** `RecipeMeta` (or the `DocItem/Content` swizzle) renders
-  "參考影片：[title](url) · channel" when `source_url` is set.
-- **`check-recipes.mjs`:**
-  - `source_url`, if present, must be an `http(s)` URL.
-  - Fail in CI if any recipe still has `draft: true`. (Optional. It stops you
-    forgetting one, but it also blocks committing work-in-progress drafts.
-    Builder's call: recommend making it a warning.)
+- **`check-recipes.mjs`:** fail in CI if any recipe still has
+  `draft: true`. (Optional. It stops you forgetting one, but it also blocks
+  committing work-in-progress drafts. Builder's call: recommend making it a
+  warning.)
 - **`.gitignore`:** add `drafts/`.
 - **`package.json`:** add the `import:recipe` script, and `extract:video`
   later in phase 2.
 - **`README.md`:** a short "由影片新增食譜" section in Cantonese, matching the
   existing README voice.
-- **`templates/recipe-template.md`:** add the optional `source_*` fields.
 
 ## Decisions I made (no input from you yet)
 
@@ -183,7 +179,6 @@ Actions workflow tests and deploys.
   avoids handling API keys until the prompt is proven.
 - Use **Docusaurus `draft: true`** as the review gate. There's no separate
   staging folder.
-- Credit the source video on every page.
 - Keep `drafts/` out of git.
 
 ## Left to the builder

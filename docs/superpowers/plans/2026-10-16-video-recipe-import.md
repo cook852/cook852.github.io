@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn a Gemini extraction (JSON) of a cooking video into a valid, draft recipe page with one command, with the site crediting the source video.
+**Goal:** Turn a Gemini extraction (JSON) of a cooking video into a valid, draft recipe page with one command.
 
-**Architecture:** Gemini receives a prompt and a JSON Schema that are committed in `extraction/`. Their allowed category and tag lists are generated from the repo by `scripts/sync-extraction.mjs`. `scripts/import-recipe.mjs` is a deterministic Node CLI with no AI. It validates the JSON, warns on Simplified/Mainland wording (`scripts/hk-wording.mjs`), renders the Markdown, reuses `checkRecipe()` and writes a review checklist. The site shows a source credit from new `source_*` frontmatter fields. `draft: true` hides a recipe from production until it has been reviewed.
+**Architecture:** Gemini receives a prompt and a JSON Schema that are committed in `extraction/`. Their allowed category and tag lists are generated from the repo by `scripts/sync-extraction.mjs`. `scripts/import-recipe.mjs` is a deterministic Node CLI with no AI. It validates the JSON, warns on Simplified/Mainland wording (`scripts/hk-wording.mjs`), renders the Markdown, reuses `checkRecipe()` and writes a review checklist. `draft: true` hides a recipe from production until it has been reviewed.
 
 **Tech Stack:** Node 22 ESM scripts, `gray-matter` (already a devDependency), `node:test` + `node:assert/strict`, Docusaurus 3.10 / React 19 / TypeScript.
 
@@ -17,7 +17,7 @@
 - No new npm dependencies. Read YAML with `matter.engines.yaml.parse` from gray-matter, and validate the draft by hand rather than with ajv.
 - Tests live in `scripts/*.test.mjs` (the `npm test` glob). Name them `function_condition_expectedOutcome`.
 - Never invent amounts. An empty `amount` is an error that tells the user to write `適量`.
-- Timestamps never appear in `recipes/**`. They go only in `drafts/`.
+- Timestamps and the source video (`source.*`) never appear in `recipes/**`. They go only in `drafts/`. (No source credit on the page in this version.)
 - `drafts/` is gitignored.
 - Out of scope: the phase-2 `extract:video` Gemini API script (the spec says to build it only after the manual flow is proven).
 
@@ -31,34 +31,21 @@
 
 ---
 
-### Task 1: Source credit + checker updates
+### Task 1: Draft warning in the checker
 
 **Files:**
 - Modify: `scripts/check-recipes.mjs`
 - Modify: `scripts/check-recipes.test.mjs`
-- Modify: `src/components/RecipeMeta/index.tsx`, `src/components/RecipeMeta/styles.module.css`
-- Modify: `templates/recipe-template.md`
 
 **Interfaces:**
 - Produces:
-  - `checkRecipe(relPath, source): string[]` now also errors on a bad `source_url`.
   - New `recipeWarnings(relPath, source): string[]`.
-  - `checkAll()` is unchanged.
   - New `warnAll(rootDir = 'recipes'): string[]`, which walks the folders the same way `checkAll` does.
+  - `checkRecipe` and `checkAll` are unchanged.
 
 - [ ] **Step 1: Write failing tests** in `scripts/check-recipes.test.mjs`:
 
 ```js
-test('checkRecipe_httpsSourceUrl_returnsNoErrors', () => {
-  const source = VALID.replace('tags:', 'source_url: https://www.youtube.com/watch?v=abc\ntags:');
-  assert.deepEqual(checkRecipe(PATH, source), []);
-});
-
-test('checkRecipe_nonHttpSourceUrl_reportsSourceUrl', () => {
-  const source = VALID.replace('tags:', 'source_url: youtube.com/abc\ntags:');
-  assert.ok(matches(checkRecipe(PATH, source), /source_url/));
-});
-
 test('recipeWarnings_draftTrue_warnsDraft', () => {
   const source = VALID.replace('tags:', 'draft: true\ntags:');
   assert.ok(matches(recipeWarnings(PATH, source), /draft/));
@@ -69,36 +56,20 @@ test('recipeWarnings_noDraft_returnsEmpty', () => {
 });
 ```
 
-- [ ] **Step 2:** Run `npm test`. Expected: the 4 new tests FAIL (`recipeWarnings` is not exported, and the source_url check is missing).
+- [ ] **Step 2:** Run `npm test`. Expected: the 2 new tests FAIL (`recipeWarnings` is not exported).
 
 - [ ] **Step 3: Implement.**
-  - In `checkRecipe`: if `data.source_url !== undefined` and it doesn't match `/^https?:\/\/\S+$/`, push `` `${where}: source_url 一定要係 http(s) 網址` ``.
   - Add `recipeWarnings`, which returns `` [`${where}: 仲係 draft: true，正式網站唔會顯示`] `` when `data.draft === true`.
   - Add `warnAll`.
   - In the CLI block, print each warning with `⚠` before the error loop. Warnings never change the exit code.
 
 - [ ] **Step 4:** Run `npm test`. Expected: all tests PASS.
 
-- [ ] **Step 5: Add the source credit in `RecipeMeta`.**
-  - Extend `RecipeFrontMatter` with `source_url?: string; source_title?: string; source_channel?: string`.
-  - When `source_url` is set, render one more item after 難度 with the label `參考影片`. Its value is `<a href={source_url} target="_blank" rel="noopener noreferrer">{source_title ?? source_url}</a>`, followed by ` · {source_channel}` when a channel is set.
-  - Give that item a class that makes it take the full row (`flex-basis: 100%`), so a long title wraps on its own line.
-
-- [ ] **Step 6: Update the template.** Add these commented optional lines to `templates/recipe-template.md`, under `tags`:
-
-```yaml
-# source_url: https://www.youtube.com/watch?v=...   # 可選：參考影片
-# source_title: 影片標題
-# source_channel: 頻道名稱
-```
-
-- [ ] **Step 7: Verify.** Add `source_url`, `source_title` and `source_channel` to `recipes/soup/daikon-pork-rib-soup.md` in a scratch edit (don't commit it). Run `npm run check:recipes` and `npm run build`. Expected: `✓ 所有食譜格式正確` and a successful build. Then `npm start` and check that the credit line shows and the link opens in a new tab. Revert the scratch edit.
-
-- [ ] **Step 8: Commit.**
+- [ ] **Step 5: Commit.**
 
 ```bash
-git add scripts/check-recipes.mjs scripts/check-recipes.test.mjs src/components/RecipeMeta templates/recipe-template.md
-git commit -m "feat: credit source video and warn on draft recipes"
+git add scripts/check-recipes.mjs scripts/check-recipes.test.mjs
+git commit -m "feat: warn on draft recipes in check:recipes"
 ```
 
 ---
@@ -201,7 +172,7 @@ git commit -m "feat: add Gemini extraction prompt and schema synced from tags an
 - Create: `scripts/import-recipe.test.mjs`
 
 **Interfaces:**
-- Consumes: `loadVocabulary()` (Task 2), and `checkRecipe()` (Task 1) in the round-trip test.
+- Consumes: `loadVocabulary()` (Task 2), and `checkRecipe()` from `scripts/check-recipes.mjs` in the round-trip test.
 - Produces:
   - `wordingWarnings(text: string): string[]` (in `hk-wording.mjs`), plus the exported data `SIMPLIFIED_CHARS: string` and `MAINLAND_TERMS: Record<string, string>`.
   - From `import-recipe.mjs`:
@@ -243,7 +214,7 @@ test('wordingWarnings_hkText_returnsEmpty', () => {
   - `validateDraft_missingRequiredField_reportsField`: deleting `cook_time` → `/cook_time/`.
   - `validateDraft_badDifficulty_reportsDifficulty`.
   - `renderRecipe_fullDraft_passesCheckRecipe`: `checkRecipe('home-style/x.md', renderRecipe(DRAFT))` is `[]`.
-  - `renderRecipe_fullDraft_hasDraftAndSourceFrontmatter`: `matter(out).data` has `draft === true` and `source_url === DRAFT.source.url`, and `tags` deep-equals `DRAFT.tags`.
+  - `renderRecipe_fullDraft_hasDraftAndNoSource`: `matter(out).data` has `draft === true`, `tags` deep-equals `DRAFT.tags`, and no `source_url` key; the output doesn't contain `DRAFT.source.url`.
   - `renderRecipe_yamlSpecialTitle_roundTrips`: the title `'蒸肉餅: #1 "家常"'` → `matter(out).data.title` equals it exactly. (Review Focus 2)
   - `renderRecipe_noSeasoningsOrTips_omitsThoseSections`: the output contains no `## 調味料` and no `## 小貼士`, and `checkRecipe` is `[]`. (Review Focus 3)
   - `renderRecipe_ingredientWithNote_rendersFullWidthParens`: `{name:'薑', amount:'3 片', note:'切絲'}` → contains `- 薑 3 片（切絲）`.
@@ -265,10 +236,9 @@ test('wordingWarnings_hkText_returnsEmpty', () => {
     - `ingredients` and `steps` are non-empty
     - every ingredient and seasoning has a non-blank `name` and `amount`
   - **`renderRecipe`:**
-    - Frontmatter order: `title, description, servings, prep_time, cook_time, difficulty, tags, source_url, source_title, source_channel, draft`.
+    - Frontmatter order: `title, description, servings, prep_time, cook_time, difficulty, tags, draft`.
     - Write `tags` in flow style (`[a, b]`), as the existing recipes do.
     - Write a scalar string bare if it matches `/^[^\s:#\[\]{}&*!|>'"%@`,?-][^:#]*$/` and has no trailing space. Otherwise write it as `JSON.stringify(value)` (valid YAML double-quoted).
-    - Skip any `source_*` that is empty.
     - Body sections follow the template exactly, with one blank line between sections and a trailing newline.
   - **`renderReview`:**
     - Title line: `` # 審稿清單：${title}（${source.url}） ``.
@@ -298,7 +268,7 @@ git commit -m "feat: validate and render Gemini recipe drafts"
 - Modify: `README.md`
 
 **Interfaces:**
-- Consumes: everything Task 3 produces, `loadVocabulary` (Task 2), `checkRecipe` (Task 1) and `wordingWarnings`.
+- Consumes: everything Task 3 produces, `loadVocabulary` (Task 2), `checkRecipe` and `wordingWarnings`.
 - Produces:
   - `parseDraftText(text: string): object`. It strips a leading or trailing Markdown code fence (```` ```json ```` or ```` ``` ````) and surrounding whitespace, then calls `JSON.parse`. On a parse error it throws `` `JSON 格式錯誤：${e.message}` ``.
   - `importRecipe(draftPath: string, {repoRoot = REPO_ROOT, force = false, addDict = false} = {}): {recipePath: string, reviewPath: string, errors: string[], warnings: string[], newTags: object[], dictLines: string[]}`.
@@ -367,7 +337,7 @@ git commit -m "feat: validate and render Gemini recipe drafts"
   2. Run `npm run import:recipe -- drafts/steamed-minced-pork.json`. Expected: `✓ 已建立 recipes/home-style/steamed-minced-pork.md（draft）`.
   3. Run `npm run check:recipes`. Expected: a `⚠ … draft` line, then `✓`.
   4. Run `npm run build`. Expected: success, with no `steamed-minced-pork` in `build/`.
-  5. Run `npm start` and check that the page shows with its 參考影片 credit.
+  5. Run `npm start` and check that the draft page shows.
   6. Delete the generated recipe. Don't commit sample content.
 
 - [ ] **Step 8: Commit.**
