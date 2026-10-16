@@ -57,6 +57,23 @@ const config: Config = {
     ],
   ],
 
+  themes: [
+    [
+      '@easyops-cn/docusaurus-search-local',
+      {
+        hashed: true,
+        language: ['zh'],
+        indexDocs: true,
+        indexBlog: false,
+        indexPages: false,
+        docsRouteBasePath: '/recipes',
+        highlightSearchTermsOnTargetPage: true,
+        // jieba ships a Simplified dictionary; teach it Traditional cooking words.
+        zhUserDictPath: './search/zh-user-dict.txt',
+      },
+    ],
+  ],
+
   themeConfig: {
     colorMode: {
       respectPrefersColorScheme: true,

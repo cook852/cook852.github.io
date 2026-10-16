@@ -1,0 +1,35 @@
+{
+  "theme.common.skipToMainContent": {
+    "message": "跳至主要內容"
+  },
+  "theme.SearchBar.label": {
+    "message": "搜尋食譜"
+  },
+  "theme.SearchBar.seeAll": {
+    "message": "查看全部結果"
+  },
+  "theme.SearchBar.noResultsText": {
+    "message": "搵唔到相關食譜"
+  },
+  "theme.SearchBar.searchInContext": {
+    "message": "查看「{context}」以內嘅全部結果"
+  },
+  "theme.SearchBar.seeAllOutsideContext": {
+    "message": "查看「{context}」以外嘅全部結果"
+  },
+  "theme.SearchPage.existingResultsTitle": {
+    "message": "「{query}」嘅搜尋結果"
+  },
+  "theme.SearchPage.emptyResultsTitle": {
+    "message": "搜尋食譜"
+  },
+  "theme.SearchPage.documentsFound.plurals": {
+    "message": "共搵到 {count} 個食譜"
+  },
+  "theme.SearchPage.noResultsText": {
+    "message": "搵唔到相關食譜"
+  },
+  "theme.SearchPage.searchContext.everywhere": {
+    "message": "全部"
+  }
+}
