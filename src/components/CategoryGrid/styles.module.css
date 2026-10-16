@@ -1,0 +1,44 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.5rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-card-border-radius);
+  background: var(--ifm-card-background-color);
+  color: var(--ifm-font-color-base);
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+a.card:hover {
+  border-color: var(--ifm-color-primary);
+  color: var(--ifm-font-color-base);
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.empty {
+  opacity: 0.55;
+}
+
+.emoji {
+  font-size: 2.25rem;
+  line-height: 1.2;
+}
+
+.label {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.count {
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-700);
+}
