@@ -1,0 +1,9 @@
+{
+  "label": "甜品",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "slug": "/category/tian-pin",
+    "description": "糖水同各式甜品。"
+  }
+}

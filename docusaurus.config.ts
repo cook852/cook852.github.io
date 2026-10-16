@@ -46,6 +46,8 @@ const config: Config = {
           path: 'recipes',
           routeBasePath: 'recipes',
           sidebarPath: './sidebars.ts',
+          tags: 'tags.yml',
+          onInlineTags: 'throw',
         },
         blog: false,
         theme: {
@@ -68,6 +70,7 @@ const config: Config = {
           position: 'left',
           label: '食譜',
         },
+        {to: '/recipes/tags', label: '標籤', position: 'left'},
       ],
     },
     footer: {
